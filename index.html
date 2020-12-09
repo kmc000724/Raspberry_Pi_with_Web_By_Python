@@ -1,0 +1,177 @@
+<html>
+<head>
+	<title>
+		GPIO Control
+	</title>
+</head>
+<script type = "text/javascript">
+function read_gpio ()
+{
+	var gpio_req = new XMLHttpRequest ();
+	gpio_req.open ("POST", "/gpio", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send ();
+	return gpio_req.responseText;
+}
+
+function write_pin (pin, state)
+{
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin + "&state=" + state;
+	gpio_req.open ("POST", "/gpio_write", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (cmd);
+	window.location.reload ();
+}
+
+function set_mode_pin (pin, mode)
+{
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin + "&mode=" + mode
+	gpio_req.open ("POST", "/gpio_mode", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (cmd);
+	window.location.reload ();
+}
+
+function pwm_reset (pin)
+{
+	/*
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin;
+	gpio_req.open ("POST", "/gpio_pwm_reset", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (pin);
+	*/
+	alert (pin);
+}
+
+</script>
+<body>
+	<div>
+		</script>
+		<style>
+			table 
+			{
+				width: 100%;
+			}
+			td
+			{
+				padding: 10px;
+				border: 1px solid #000000;
+			}
+			input
+			{
+				width: 100%;
+				height: 35px;
+			}
+		</style>
+		<table style = "text-align:center;">
+			<th>
+				<tr>
+					<td>BCM</td>
+					<td>wPi</td>
+					<td>Name</td>
+					<td>Mode</td>
+					<td>V</td>
+					<td colspan = "3">Physical</td>
+					<td>V</td>
+					<td>Mode</td>
+					<td>Name</td>
+					<td>wPi</td>
+					<td>BCM</td>
+				</tr>
+			</th>
+			<tbody>
+			<script type = "text/javascript">
+				var str = "";
+				var read_line = read_gpio ().split ("\n");
+				var gpio_status = "";
+				for (var i = 0; i < read_line.length - 4 - 3; i++)
+				{
+					document.writeln ("<tr>");
+					pin_status = read_line[i + 3].split ("|");
+					for (var j = 0; j < pin_status.length - 1 - 1; j++)
+					{
+						if (j + 1 == 4)
+						{
+							if (pin_status[j + 2] != "   " && pin_status[j + 3].replace (/(\s*)/g, "") != "27")
+							{
+								document.writeln ("<td><input type = \"button\" value = " + pin_status[j + 1] + " onClick = \"set_mode_pin (" + pin_status[j + 3] + ", '" + pin_status[j + 1] + "');\"></td>");
+							}
+							else
+							{
+								document.writeln ("<td>" + pin_status[j + 1] + "</td>");
+							}
+						}
+						else if (j + 1 == 6)
+						{
+							if (pin_status[j] !=  "   " && pin_status[j - 1].replace (/(\s*)/g, "") != "IN")
+							{
+								document.writeln ("<td><input type = \"button\" value = " + pin_status[j + 1] + " onClick = \"write_pin (" + pin_status[j + 1] + ", " + pin_status[j] + ");\"></td>");
+							}
+							else
+							{
+								document.writeln ("<td>" + pin_status[j + 1] + "</td>");
+							}
+						}
+						else if (j + 1 == 8)
+						{
+							if (pin_status[j + 2] !=  "   " && pin_status[j + 3].replace (/(\s*)/g, "") != "IN")
+							{
+								document.writeln ("<td><input type = \"button\" value = " + pin_status[j + 1] + " onClick = \"write_pin (" + pin_status[j + 1] + ", " + pin_status[j + 2] + ");\"></td>");
+							}
+							else
+							{
+								document.writeln ("<td>" + pin_status[j + 1] + "</td>");
+							}
+						}
+						else if (j + 1 == 10)
+						{
+							if (pin_status[j] !=  "   " && pin_status[j - 1].replace (/(\s*)/g, "") != "28")
+							{
+								document.writeln ("<td><input type = \"button\" value = " + pin_status[j + 1] + " onClick = \"set_mode_pin (" + pin_status[j - 1] + ", '" + pin_status[j + 1] + "');\"></td>");
+							}
+							else
+							{
+								document.writeln ("<td>" + pin_status[j + 1] + "</td>");
+							}
+						}
+						else
+						{
+							document.writeln ("<td>" + pin_status[j + 1] + "</td>");
+						}
+					}
+					document.writeln ("</tr>");
+				}
+			</script>
+			</tbody>
+		</table>
+	</div>
+	<div>
+		<table>
+			<form method = "post">
+				<tr>
+					<td style = "border:0px;width:10%">GPIO PIN: </td>
+					<td style = "border:0px;width:15%"><input name = "gpio_pin", type = "number" /></td>
+					<td rowspan = "3" style = "border:0px;"><input style = "height:149px;" type = "submit", value = "Send", formaction = "/gpio_pwm"></td>
+				</tr>
+				<tr>
+					<td style = "border:0px;width:10%">PWM Value: </td>
+					<td style = "border:0px;width:15%"><input name = "pwm_value", type = "number" /></td>
+				</tr>
+				<tr>
+					<td style = "border:0px;width:10%">PWM Start: </td>
+					<td style = "border:0px;width:15%"><input name = "pwm_range_start", type = "number" /></td>
+				</tr>
+				<tr>
+					<td style = "border:0px;width:10%">PWM End: </td>
+					<td style = "border:0px;width:15%"><input name = "pwm_range_end", type = "number" /></td>
+					<td style = "border:0px;"><input type = "submit", formaction = "/gpio_pwm_reset", value = "Reset"></td>
+				</tr>
+			</form>
+		</table>
+		<input type = "button", value = "Reload", onClick = "window.location.reload ();">
+	</div>
+</body>
+</html>
