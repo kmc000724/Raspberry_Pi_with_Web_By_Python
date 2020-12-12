@@ -1,0 +1,225 @@
+<html>
+	<head>
+		<title>
+			GPIO OUTPUT
+		</title>
+		<script src ="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	</head>
+	<body>
+		<table width = 100%>
+			<th>
+				<tr>
+					<td>GPIO PIN</td>
+					<td>Type</td>
+					<td>Value</td>
+				</tr>
+			</th>
+			<tbody>
+				<tr>
+					<td>
+						<select name ="gpio_pin">
+							<option value = "">Num</option>
+						<script type = "text/javascript">
+function check_pin_available (pin)
+{
+	var not_available =  new Array ("1", "2", "4", "6", "9", "14", "17", "20", "25", "27", "28", "30", "34", "39");
+	for (var i = 0; i < not_available.length; i++)
+	{
+		if (pin == not_available[i])
+		{
+			return false;
+		}
+	}
+	return true;
+}
+for (var i = 0; i < 40; i++)
+{
+	if (check_pin_available (i + 1) == true)
+	{
+		document.writeln ("			<option value = \"" + (i + 1) + "\">" + (i + 1) +"</option>");
+	}
+}
+						</script>
+						</select>
+					</td>
+					<td>
+						<select name = "gpio_type" onchange = "select_type ()">
+							<option value = "">Type</option>
+							<option value = "output">OUTPUT</option>
+							<option value = "pwm">PWM</option>
+						</select>
+					</td>
+					<td id = "value_part">
+					</td>
+					<script type = "text/javascript">
+var output_flag = false;
+var pwm_flag = false;
+
+function gpio_on (pin)
+{
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin + "&mode=1";
+	gpio_req.open ("POST", "/gpio40_output", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (cmd);
+}
+
+function gpio_off (pin)
+{
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin + "&mode=0";
+	gpio_req.open ("POST", "/gpio40_output", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (cmd);
+}
+
+function pwm_ready (pin)
+{
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin;
+	gpio_req.open ("POST", "/gpio40_pwm_ready", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (cmd);
+}
+
+function pwm_value (pin, value)
+{
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin + "&pwm=" + value;
+	gpio_req.open ("POST", "/gpio40_pwm_cdc", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (cmd);
+}
+
+function pwm_stop (pin)
+{
+	var gpio_req = new XMLHttpRequest ();
+	var cmd = "pin=" + pin;
+	gpio_req.open ("POST", "/gpio40_pwm_stop", false);
+	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+	gpio_req.send (cmd);
+}
+
+function change_value ()
+{
+	var gpio_value = document.getElementsByName ("gpio_value")[0];
+	if (gpio_value.type == "checkbox")
+	{
+		var gpio_pin = document.getElementsByName ("gpio_pin")[0];
+		if (gpio_pin.value == "")
+		{
+			alert ("Check num of gpio pin");
+		}
+		else
+		{
+			if (gpio_value.checked == true)
+			{
+				gpio_on (gpio_pin.value)
+			}
+			else
+			{
+				gpio_off (gpio_pin.value)
+			}
+		}
+	}
+	else if (gpio_value.type == "range")
+	{
+		var gpio_pin = document.getElementsByName ("gpio_pin")[0];
+		if (gpio_pin.value == "")
+		{
+			alert ("Check num of gpio pin");
+		}
+		else
+		{
+			pwm_value (gpio_pin.value, gpio_value.value);
+			//document.getElementById ("print_pwm_value").innerHTML = gpio_value.value;
+		}
+	}
+}
+
+function select_type ()
+{
+	var type = document.getElementsByName ("gpio_type")[0].value;
+	if (type == "output") // && output_flag == false)
+	{
+		if (document.getElementsByName ("gpio_pin")[0].value != "")
+		{
+			var value_part = document.getElementById ("value_part");
+			//if (pwm_flag == true)
+			{
+				//pwm_flag = false;
+				var element = document.getElementsByName ("gpio_value")[0];
+				if (element != null)
+				{
+					value_part.removeChild (element);	
+				}
+			}
+			if (pwm_flag == true)
+			{
+				pwm_stop (document.getElementsByName ("gpio_pin")[0].value);
+			}
+			output_flag = true;
+			var new_input = document.createElement ("input");
+			new_input.type = "checkbox";
+			new_input.name = "gpio_value";
+			new_input.onchange = change_value;
+			value_part.appendChild (new_input);
+		}
+		else
+		{
+			alert ("input num of gpio pin");
+			document.getElementsByName ("gpio_type")[0].value = "";
+		}
+	}
+	else if (type == "pwm") // && pwm_flag == false)
+	{
+		if (document.getElementsByName ("gpio_pin")[0].value != "")
+		{
+			var value_part = document.getElementById ("value_part");
+			//if (output_flag == true)
+			{
+				//output_flag = false;
+				var element = document.getElementsByName ("gpio_value")[0];
+				if (element != null)
+				{
+					value_part.removeChild (element);
+				}
+			}
+			pwm_flag = true;
+			var new_input = document.createElement ("input");
+			new_input.type = "range";
+			new_input.name = "gpio_value";
+			new_input.min = "0";
+			new_input.max = "100";
+			new_input.oninput = change_value;
+			value_part.appendChild (new_input);
+			pwm_ready (document.getElementsByName ("gpio_pin")[0].value);
+		}
+		else
+		{
+			alert ("input num of gpio pin");
+			document.getElementsByName ("gpio_type")[0].value = "";
+		}
+	}
+	else
+	{
+		var value_part = document.getElementById ("value_part");
+		//if (output_flag == true || pwm_flag == true)
+		{
+			output_flag = pwm_flag = false;
+			var element = document.getElementsByName ("gpio_value")[0];
+			if (element != null)
+			{
+				value_part.removeChild (element);
+			}
+		}
+	}
+}
+					</script>
+				</tr>
+				<tr>
+				</tr>
+			</tbody>
+		</table>
+	</body>
+</html>
