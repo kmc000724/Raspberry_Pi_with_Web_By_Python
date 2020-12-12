@@ -3,6 +3,7 @@
 	<title>
 		GPIO Control
 	</title>
+	<script src ="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 </head>
 <script type = "text/javascript">
 function read_gpio ()
@@ -32,18 +33,6 @@ function set_mode_pin (pin, mode)
 	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
 	gpio_req.send (cmd);
 	window.location.reload ();
-}
-
-function pwm_reset (pin)
-{
-	/*
-	var gpio_req = new XMLHttpRequest ();
-	var cmd = "pin=" + pin;
-	gpio_req.open ("POST", "/gpio_pwm_reset", false);
-	gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
-	gpio_req.send (pin);
-	*/
-	alert (pin);
 }
 
 </script>
@@ -149,29 +138,49 @@ function pwm_reset (pin)
 		</table>
 	</div>
 	<div>
-		<table>
+		<table style = "text-align:center;">
 			<form method = "post">
 				<tr>
-					<td style = "border:0px;width:10%">GPIO PIN: </td>
-					<td style = "border:0px;width:15%"><input name = "gpio_pin", type = "number" /></td>
+					<td style = "border:0px;width:20%">GPIO PIN: </td>
+					<td colspan = "2" style = "border:0px;width:30%"><input name = "gpio_pin", type = "number" /></td>
 					<td rowspan = "3" style = "border:0px;"><input style = "height:149px;" type = "submit", value = "Send", formaction = "/gpio_pwm"></td>
 				</tr>
 				<tr>
 					<td style = "border:0px;width:10%">PWM Value: </td>
-					<td style = "border:0px;width:15%"><input name = "pwm_value", type = "number" /></td>
+					<td style = "border:0px;width:30%"><input name = "pwm_value" class = "pwm_value", type = "range", value = "0", min = "0", max = "100"/></td>
+					<td style = "border:0px;width:10%"><span id = "pwm_value_str">0</span></td>
 				</tr>
 				<tr>
-					<td style = "border:0px;width:10%">PWM Start: </td>
-					<td style = "border:0px;width:15%"><input name = "pwm_range_start", type = "number" /></td>
+					<td style = "border:0px;width:20%">PWM Start: </td>
+					<td colspan = "2" style = "border:0px;width:30%"><input name = "pwm_range_start", type = "number" /></td>
 				</tr>
 				<tr>
-					<td style = "border:0px;width:10%">PWM End: </td>
-					<td style = "border:0px;width:15%"><input name = "pwm_range_end", type = "number" /></td>
+					<td style = "border:0px;width:20%">PWM End: </td>
+					<td colspan = "2" style = "border:0px;width:30%"><input name = "pwm_range_end", type = "number" /></td>
 					<td style = "border:0px;"><input type = "submit", formaction = "/gpio_pwm_reset", value = "Reset"></td>
 				</tr>
 			</form>
 		</table>
 		<input type = "button", value = "Reload", onClick = "window.location.reload ();">
+		<script type = "text/javascript">
+			function PWM_Slider (pwm) 
+			{
+				var gpio_req = new XMLHttpRequest ();
+				var cmd = "pin=" + document.getElementsByName ("gpio_pin")[0].value + "&pwm=" + pwm
+				gpio_req.open ("POST", "/gpio_pwm_cdc", false);
+				gpio_req.setRequestHeader ("Content-Type", "application/x-www-form-urlencoded");
+				gpio_req.send (cmd);
+				document.getElementById ("pwm_value_str").innerHTML = pwm;
+			}
+	
+			var RangeSlider = function () {
+				var range = $(".pwm_value");
+				range.on ("input", function () {
+					PWM_Slider (this.value);
+				});
+			};
+			RangeSlider ()
+		</script>
 	</div>
 </body>
 </html>

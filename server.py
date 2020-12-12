@@ -36,8 +36,22 @@ def set_mode_pin ():
     else:
         GPIO.setup (pin, GPIO.IN)
 
+@route ("/gpio_pwm_cdc", method = "POST")
+def pwm_cdc ():
+    pin = request.forms.get ("pin")
+    if (pin == ""):
+        return "<script style=\"text/javascript\">alert (\"Bad num of pin\");</script>"
+    else:
+        pin = int (pin)
+
+    if (pwm_list[pin][4] == False):
+        return "<script style=\"text/javascript\">alert (\"You need to set pwm data first\");</script>"
+
+    pwm = int (request.forms.get ("pwm"))
+    pwm_list[pin][1] = pwm
+
 # pwm_pin, pwm_value, pwm_start, pwm_end
-pwm_list = [[None, 0, 0, 0, True] for i in range (40)]
+pwm_list = [[None, 0, 0, 0, True] for i in range (41)]
 @route ("/gpio_pwm", method = "POST")
 def pwm_pin ():
     pwm_pin = request.forms.get ("gpio_pin")
@@ -66,9 +80,12 @@ def pwm_pin ():
     pwm_end = request.forms.get ("pwm_range_end")
 
     if (pwm_end == ""):
-        return "<script style=\"text/javascript\">alert (\"Input num of pwm en \"); history.back ();</script>"
+        return "<script style=\"text/javascript\">alert (\"Input num of pwm end \"); history.back ();</script>"
     else:
         pwm_end = int (pwm_end)
+        if (pwm_end > 100):
+           return "<script style=\"text/javascript\">alert (\"Bad num of pwm end (0 ~ 100)\"); history.back ();</script>"
+            
 
     if (pwm_list[pwm_pin][0] != None):
         pwm_list[pwm_pin][4] = False
